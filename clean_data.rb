@@ -1,11 +1,11 @@
 require "httparty"
 require "pry"
 
-years = (2015..2016).to_a
+years = (1950..1951).to_a
 # years.each do |year|
 #   url = "https://en.wikipedia.org/w/api.php?action=query&titles=#{year}&prop=revisions&rvprop=content&format=json"
 #   response = HTTParty.get(url)
-#   output_file = File.new(year.to_s + ".txt", "w")
+#   output_file = File.new("raw_data/" + year.to_s + ".txt", "w")
 #   parsed = JSON.parse(response.body)
 #   page_id = parsed["query"]["pages"].keys[0]
 #   page_data = parsed["query"]["pages"]["#{page_id}"]["revisions"][0]["*"]
@@ -18,15 +18,15 @@ years.each do |year|
   is_a_date = ["[[January", "[[February", "[[March", "[[April", "[[May", "[[June", "[[July", "[[August", "[[September", "[[October", "[[November", "[[December"]
   months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
-  database_file = File.new(year.to_s + "_ready.txt", "w")
+  database_file = File.new("for_database/" + year.to_s + "_ready.txt", "w")
   in_events = true
   while in_events == true
     #
     data_month = nil
     data_day = nil
 
-    File.open("#{year}.txt", "r").each do |line|
-      if (line.include? "==Births==") || (line.include? "==Deaths==")
+    File.open("raw_data/#{year}.txt", "r").each do |line|
+      if (line.include? "==Births==") || (line.include? "==Deaths==") || (line.include? "== Births ==")
         in_events = false
         break
       end
@@ -40,15 +40,18 @@ years.each do |year|
       is_a_date.each do |month|
 
         if (line.include? month) || (line[0..1]== "**")
+          binding.pry
           month = month.gsub("[", "")
-          if line.include? "==#{month}=="
+          if (line.include? "==#{month}==") || (line.include? "=== #{month} ===") || (line.include? "===#{month}===")
+
             @current_month = month
-          elsif line.length < 18
+          elsif line.length < 25
             day_find = line.gsub("*", "")
             day_find.gsub!("[[", "")
             @current_month = month.gsub("[", "")
             day_find.gsub!("#{@current_month}", "")
             day_find.lstrip!
+            binding.pry
             @current_day = ""
             if day_find[0].to_i != 0
               @current_day +=  day_find[0]
@@ -103,6 +106,7 @@ years.each do |year|
 
           data_info_array = data_info.split("<ref")
           data_info = data_info_array[0]
+          # NEED TO RETHINK THIS - PULL OUT LINKS USING THE INCLUDED BRACKETS
           data_info.gsub!("[", "")
           data_info.gsub!("]", "")
           data_info.gsub!(";", "")
@@ -152,8 +156,7 @@ years.each do |year|
           break
         end
       end
-      binding.pry
-      if (!data_month.nil?) && (data_info != "") && (data_info != nil)
+      if (!data_month.nil?) && (data_info != "") && (data_info != nil) && (!data_info.include? "File:")
         database_file.write("#{year}, #{data_month}, #{data_day}, #{data_info}, #{data_ongoing}, #{data_is_range}, #{data_end_month}, #{data_end_day}\n")
       end
     end
