@@ -1,17 +1,17 @@
 require "httparty"
 require "pry"
 
-years = (2014..2015).to_a
-years.each do |year|
-  url = "https://en.wikipedia.org/w/api.php?action=query&titles=#{year}&prop=revisions&rvprop=content&format=json"
-  response = HTTParty.get(url)
-  output_file = File.new(year.to_s + ".txt", "w")
-  parsed = JSON.parse(response.body)
-  page_id = parsed["query"]["pages"].keys[0]
-  page_data = parsed["query"]["pages"]["#{page_id}"]["revisions"][0]["*"]
-  output_file.write(page_data)
-  output_file.close
-end
+years = (2015..2016).to_a
+# years.each do |year|
+#   url = "https://en.wikipedia.org/w/api.php?action=query&titles=#{year}&prop=revisions&rvprop=content&format=json"
+#   response = HTTParty.get(url)
+#   output_file = File.new(year.to_s + ".txt", "w")
+#   parsed = JSON.parse(response.body)
+#   page_id = parsed["query"]["pages"].keys[0]
+#   page_data = parsed["query"]["pages"]["#{page_id}"]["revisions"][0]["*"]
+#   output_file.write(page_data)
+#   output_file.close
+# end
 
 years.each do |year|
 
@@ -26,8 +26,7 @@ years.each do |year|
     data_day = nil
 
     File.open("#{year}.txt", "r").each do |line|
-
-      if line.include? "==Births=="
+      if (line.include? "==Births==") || (line.include? "==Deaths==")
         in_events = false
         break
       end
@@ -39,20 +38,22 @@ years.each do |year|
       data_end_day = nil
 
       is_a_date.each do |month|
+
         if (line.include? month) || (line[0..1]== "**")
-          if line == "==#{month}==\n"
+          month = month.gsub("[", "")
+          if line.include? "==#{month}=="
             @current_month = month
-          elsif line.length < 15
+          elsif line.length < 18
             day_find = line.gsub("*", "")
             day_find.gsub!("[[", "")
-            day_find.lstrip!
             @current_month = month.gsub("[", "")
             day_find.gsub!("#{@current_month}", "")
+            day_find.lstrip!
             @current_day = ""
             if day_find[0].to_i != 0
               @current_day +=  day_find[0]
             end
-            if day_find[1].to_i != 0
+            if (day_find[1].to_i != 0) || (day_find[1] == "0")
               @current_day +=  day_find[1]
             end
           end
@@ -150,8 +151,8 @@ years.each do |year|
           end
           break
         end
-        binding.pry
       end
+      binding.pry
       if (!data_month.nil?) && (data_info != "") && (data_info != nil)
         database_file.write("#{year}, #{data_month}, #{data_day}, #{data_info}, #{data_ongoing}, #{data_is_range}, #{data_end_month}, #{data_end_day}\n")
       end
