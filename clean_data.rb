@@ -3,17 +3,17 @@ require "pry"
 
 class CleanData
 
-  years = (1950..1951).to_a
-  # years.each do |year|
-  #   url = "https://en.wikipedia.org/w/api.php?action=query&titles=#{year}&prop=revisions&rvprop=content&format=json"
-  #   response = HTTParty.get(url)
-  #   output_file = File.new("raw_data/" + year.to_s + ".txt", "w")
-  #   parsed = JSON.parse(response.body)
-  #   page_id = parsed["query"]["pages"].keys[0]
-  #   page_data = parsed["query"]["pages"]["#{page_id}"]["revisions"][0]["*"]
-  #   output_file.write(page_data)
-  #   output_file.close
-  # end
+  years = (1950..2015).to_a
+  years.each do |year|
+    url = "https://en.wikipedia.org/w/api.php?action=query&titles=#{year}&prop=revisions&rvprop=content&format=json"
+    response = HTTParty.get(url)
+    output_file = File.new("raw_data/" + year.to_s + ".txt", "w")
+    parsed = JSON.parse(response.body)
+    page_id = parsed["query"]["pages"].keys[0]
+    page_data = parsed["query"]["pages"]["#{page_id}"]["revisions"][0]["*"]
+    output_file.write(page_data)
+    output_file.close
+  end
 
   years.each do |year|
 
@@ -42,7 +42,6 @@ class CleanData
         is_a_date.each do |month|
 
           if (line.include? month) || (line[0..1]== "**")
-            binding.pry
             month = month.gsub("[", "")
             if (line.include? "==#{month}==") || (line.include? "=== #{month} ===") || (line.include? "===#{month}===")
 
@@ -53,7 +52,6 @@ class CleanData
               @current_month = month.gsub("[", "")
               day_find.gsub!("#{@current_month}", "")
               day_find.lstrip!
-              binding.pry
               @current_day = ""
               if day_find[0].to_i != 0
                 @current_day +=  day_find[0]
@@ -108,12 +106,23 @@ class CleanData
 
             data_info_array = data_info.split("<ref")
             data_info = data_info_array[0]
-            # NEED TO RETHINK THIS - PULL OUT LINKS USING THE INCLUDED BRACKETS
+            if data_info.include? "&ndash"
+              start = data_info.index("&ndash") + 7
+              data_info = data_info[start..-1]
+              data_info.lstrip!
+            end
+            parens = data_info.scan(/\[\[([^\]]*)\]\]/)
+            parens.each do |p|
+              x = p[0].split("|")
+              if x[1] != nil
+                data_info.slice!("[[" + x[0] + "|")
+              end
+            end
             data_info.gsub!("[", "")
             data_info.gsub!("]", "")
             data_info.gsub!(";", "")
-            data_info.gsub!("*", "")
             data_info.gsub!("&ndash", "")
+            data_info.gsub!("*", "")
             data_info.gsub!("\n", "")
             data_info.lstrip!
             if data_info[0].to_i != 0
