@@ -3,7 +3,7 @@ require "pry"
 
 class CleanData
 
-  years = (1950..2015).to_a
+  years = (1900..2015).to_a
   years.each do |year|
     url = "https://en.wikipedia.org/w/api.php?action=query&titles=#{year}&prop=revisions&rvprop=content&format=json"
     response = HTTParty.get(url)
