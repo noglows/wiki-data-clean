@@ -3,7 +3,7 @@ require "pry"
 
 class CleanData
 
-  years = (1906..2002).to_a
+  years = (1906..2000).to_a
   years.each do |year|
     url = "https://en.wikipedia.org/w/api.php?action=query&titles=#{year}&prop=revisions&rvprop=content&format=json"
     response = HTTParty.get(url)
@@ -178,7 +178,10 @@ class CleanData
               count += 1
             end
           end
+          data_info.gsub!("&nbsp", " ")
         end
+
+
 
         if (!data_month.nil?) && (data_info != "") && (data_info != nil) && (!data_info.include? "File:")
           database_file.write("#{year}, #{data_month}, #{data_day}, #{data_info}, #{data_ongoing}, #{data_is_range}, #{data_end_month}, #{data_end_day}\n")
