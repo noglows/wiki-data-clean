@@ -3,7 +3,7 @@ require "pry"
 
 class CleanData
 
-  years = (1900..2015).to_a
+  years = (2001..2002).to_a
   years.each do |year|
     url = "https://en.wikipedia.org/w/api.php?action=query&titles=#{year}&prop=revisions&rvprop=content&format=json"
     response = HTTParty.get(url)
@@ -167,6 +167,19 @@ class CleanData
             break
           end
         end
+
+        if data_info != nil
+          if (data_info[0..3].include? "-") || (data_info[0..3].include? "–")
+            count = 0
+            while count < 4
+              if (data_info[count] == "-") || (data_info[count].include? "–")
+                data_info[count] = ""
+              end
+              count += 1
+            end
+          end
+        end
+
         if (!data_month.nil?) && (data_info != "") && (data_info != nil) && (!data_info.include? "File:")
           database_file.write("#{year}, #{data_month}, #{data_day}, #{data_info}, #{data_ongoing}, #{data_is_range}, #{data_end_month}, #{data_end_day}\n")
         end
