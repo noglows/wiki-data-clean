@@ -3,7 +3,7 @@ require "pry"
 
 class CleanData
 
-  years = (1906..2000).to_a
+  years = (1906..1987).to_a
   years.each do |year|
     url = "https://en.wikipedia.org/w/api.php?action=query&titles=#{year}&prop=revisions&rvprop=content&format=json"
     response = HTTParty.get(url)
@@ -15,6 +15,7 @@ class CleanData
     output_file.close
   end
 
+  error_file = File.new("for_database/error_file.txt", "w")
   years.each do |year|
 
     is_a_date = ["[[January", "[[February", "[[March", "[[April", "[[May", "[[June", "[[July", "[[August", "[[September", "[[October", "[[November", "[[December"]
@@ -180,11 +181,23 @@ class CleanData
           end
           data_info.gsub!("&nbsp", " ")
         end
+        @contains_num = false
+        if (data_info != nil) && (data_info.length > 5)
+          data_info[0..10].each_char do |i|
+            if (i.to_i != 0) || (i == "0")
+              @contains_num = true
+              break
+            end
+          end
+        end
 
+        if (!data_month.nil?) && (data_info != "") && (data_info != nil) && (!data_info.include? "File:") && (!data_info.include? "thumb|")
 
-
-        if (!data_month.nil?) && (data_info != "") && (data_info != nil) && (!data_info.include? "File:")
-          database_file.write("#{year}, #{data_month}, #{data_day}, #{data_info}, #{data_ongoing}, #{data_is_range}, #{data_end_month}, #{data_end_day}\n")
+          if (data_info.include?"{") || (@contains_num == true) || (data_info.include?"<!--")
+            error_file.write("#{year}, #{data_month}, #{data_day}, #{data_info}, #{data_ongoing}, #{data_is_range}, #{data_end_month}, #{data_end_day}\n")
+          else
+            database_file.write("#{year}, #{data_month}, #{data_day}, #{data_info}, #{data_ongoing}, #{data_is_range}, #{data_end_month}, #{data_end_day}\n")
+          end
         end
       end
     end
